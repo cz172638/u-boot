@@ -28,6 +28,19 @@ config PCIE_CDNS_TI_EP
 	  Say Y here to enable support for the Canence PCIe Controller
 	  in Endpoint Mode on TI's K3 Socs.
 
+config PCIE_CDNS_ROCKCHIP_EP
+	bool "Rockchip RK3399 PCIe endpoint controller"
+	depends on PCI_ENDPOINT
+	depends on ARCH_ROCKCHIP
+	select PCIE_CADENCE_EP
+	help
+	  Say Y here to enable support for the Rockchip RK3399 PCIe
+	  controller in endpoint mode. The RK3399 SoC has a PCIe
+	  controller based on the Cadence PCIe core IP.
+	  This controller can operate in either Root Complex or
+	  Endpoint mode (mutually exclusive). Enable this option
+	  to use the controller as a PCIe endpoint device.
+
 config PCI_SANDBOX_EP
 	bool "Sandbox PCIe endpoint controller"
 	depends on PCI_ENDPOINT
