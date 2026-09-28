@@ -104,9 +104,54 @@ const char * const boot_devices[BROM_LAST_BOOTSOURCE + 1] = {
 };
 
 #ifdef CONFIG_DEBUG_UART_BOARD_INIT
+#define CRU_BASE		0xff500000
+#define CRU_CLKSEL_CON10	0x128
+#define CRU_CLKSEL_CON11	0x12c
+
+enum {
+	/* GRF_GPIO2A_IOMUX */
+	GPIO2A1_SHIFT		= 2,
+	GPIO2A1_MASK		= GENMASK(3, 2),
+	GPIO2A1_UART0_TX	= 1,
+	GPIO2A0_SHIFT		= 0,
+	GPIO2A0_MASK		= GENMASK(1, 0),
+	GPIO2A0_UART0_RX	= 1,
+
+	/* CRU_CLKSEL_CON10 */
+	CLK_UART0_PLL_SEL_SHIFT	= 13,
+	CLK_UART0_PLL_SEL_MASK	= GENMASK(15, 13),
+	CLK_UART0_PLL_SEL_XIN_OSC0 = 4,
+	CLK_UART0_DIV_CON_SHIFT	= 0,
+	CLK_UART0_DIV_CON_MASK	= GENMASK(4, 0),
+
+	/* CRU_CLKSEL_CON11 */
+	CLK_UART0_SEL_SHIFT	= 14,
+	CLK_UART0_SEL_MASK	= GENMASK(15, 14),
+	CLK_UART0_SEL_CLK_UART0	= 0,
+};
+
 __weak void board_debug_uart_init(void)
 {
 	static struct rk3308_grf * const grf = (void *)GRF_BASE;
+
+	if (CONFIG_DEBUG_UART_BASE == 0xff0a0000) {
+		/*
+		 * UART0 on GPIO2_A0/A1 (e.g. Radxa ROCK Pi S). Without a
+		 * Rockchip DDR blob in front of us nothing has set up its
+		 * clock, so run it from xin_osc0 (24 MHz) undivided.
+		 */
+		rk_clrsetreg(CRU_BASE + CRU_CLKSEL_CON10,
+			     CLK_UART0_PLL_SEL_MASK | CLK_UART0_DIV_CON_MASK,
+			     CLK_UART0_PLL_SEL_XIN_OSC0 << CLK_UART0_PLL_SEL_SHIFT |
+			     0 << CLK_UART0_DIV_CON_SHIFT);
+		rk_clrsetreg(CRU_BASE + CRU_CLKSEL_CON11, CLK_UART0_SEL_MASK,
+			     CLK_UART0_SEL_CLK_UART0 << CLK_UART0_SEL_SHIFT);
+		rk_clrsetreg(&grf->gpio2a_iomux,
+			     GPIO2A1_MASK | GPIO2A0_MASK,
+			     GPIO2A1_UART0_TX << GPIO2A1_SHIFT |
+			     GPIO2A0_UART0_RX << GPIO2A0_SHIFT);
+		return;
+	}
 
 	/* Enable early UART2 channel m1 on the rk3308 */
 	rk_clrsetreg(&grf->soc_con5, UART2_IO_SEL_MASK,
