@@ -127,7 +127,7 @@ config TPL_TEXT_BASE
 config TPL_MAX_SIZE
 	hex "Maximum size (in bytes) for the TPL stage"
 	default 0x2e000 if ROCKCHIP_RK3399
-	default 0x8000 if ROCKCHIP_RK3288 || ROCKCHIP_RV1126
+	default 0x8000 if ROCKCHIP_RK3288 || ROCKCHIP_RK3308 || ROCKCHIP_RV1126
 	default 0x7000 if ROCKCHIP_RK322X || ROCKCHIP_RK3328 || ROCKCHIP_RK3368
 	default 0x2800 if ROCKCHIP_PX30
 	default 0x0

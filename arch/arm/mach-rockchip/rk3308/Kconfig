@@ -17,6 +17,18 @@ config ROCKCHIP_STIMER_BASE
 config SYS_SOC
 	default "rk3308"
 
+config TPL_LDSCRIPT
+	default "arch/arm/mach-rockchip/u-boot-tpl-v8.lds"
+
+config TPL_TEXT_BASE
+	default 0xfff81000
+
+config TPL_STACK
+	default 0xfff8ff00
+
+config TPL_SYS_MALLOC_F_LEN
+	default 0x600
+
 source "board/rockchip/evb_rk3308/Kconfig"
 source "board/firefly/firefly-rk3308/Kconfig"
 
