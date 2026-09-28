@@ -264,6 +264,19 @@ To build rk3308 boards:
         make evb-rk3308_defconfig
         make CROSS_COMPILE=aarch64-linux-gnu-
 
+The Radxa ROCK Pi S uses the U-Boot TPL for DRAM init and upstream TF-A
+(built with ``PLAT=rk3308``), so no Rockchip binary is needed:
+
+.. code-block:: bash
+
+        export BL31=../trusted-firmware-a/build/rk3308/release/bl31/bl31.elf
+        make rock-pi-s-rk3308_defconfig
+        make CROSS_COMPILE=aarch64-linux-gnu-
+
+Besides ``u-boot-rockchip.bin`` this also produces
+``u-boot-rockchip-usb471.bin`` and ``u-boot-rockchip-usb472.bin`` for
+booting over USB in maskrom mode.
+
 To build rk3328 boards:
 
 .. code-block:: bash
