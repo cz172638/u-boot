@@ -8,6 +8,7 @@
 
 enum {
 	DDR4 = 0,
+	DDR2 = 2,
 	DDR3 = 3,
 	LPDDR2 = 5,
 	LPDDR3 = 6,
