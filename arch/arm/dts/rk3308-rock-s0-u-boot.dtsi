@@ -31,3 +31,12 @@
 &vdd_core {
 	regulator-init-microvolt = <1015000>;
 };
+
+#ifdef CONFIG_ROCKCHIP_RK3308_DEBUG_JTAG
+/* Keep SWD on GPIO1_C6/C7 usable while U-Boot runs */
+&pinctrl {
+	pinctrl-names = "default";
+	/* keep the board hog (rtc_32k) from rk3308-rock-s0.dts */
+	pinctrl-0 = <&rtc_32k &jtag_pins>;
+};
+#endif
