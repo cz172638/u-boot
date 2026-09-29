@@ -88,6 +88,22 @@
 
 &pinctrl {
 	bootph-all;
+
+	/*
+	 * GPIO1_C6/C7 are JTAG_TCK (SWCLK) / JTAG_TMS (SWDIO) after reset,
+	 * function 4; the same pins are UART2_M0 and SPI2 MISO/MOSI.
+	 * rk3308.dtsi has no group for the debug function.
+	 */
+	jtag {
+		bootph-all;
+
+		jtag_pins: jtag-pins {
+			bootph-all;
+			rockchip,pins =
+				<1 RK_PC6 4 &pcfg_pull_none>,
+				<1 RK_PC7 4 &pcfg_pull_none>;
+		};
+	};
 };
 
 &rtc_32k {
