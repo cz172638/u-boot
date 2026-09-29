@@ -4,6 +4,12 @@
  */
 #include "rk3308-u-boot.dtsi"
 
+/* Keep SWD on GPIO1_C6/C7 usable while U-Boot runs */
+&pinctrl {
+	pinctrl-names = "default";
+	pinctrl-0 = <&jtag_pins>;
+};
+
 &u2phy_otg {
 	/delete-property/ phy-supply;
 };
