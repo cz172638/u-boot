@@ -4,11 +4,14 @@
  */
 #include "rk3308-u-boot.dtsi"
 
+#ifdef CONFIG_ROCKCHIP_RK3308_DEBUG_JTAG
 /* Keep SWD on GPIO1_C6/C7 usable while U-Boot runs */
 &pinctrl {
 	pinctrl-names = "default";
-	pinctrl-0 = <&jtag_pins>;
+	/* keep the board hog (rtc_32k) from rk3308-rock-pi-s.dts */
+	pinctrl-0 = <&rtc_32k &jtag_pins>;
 };
+#endif
 
 &u2phy_otg {
 	/delete-property/ phy-supply;

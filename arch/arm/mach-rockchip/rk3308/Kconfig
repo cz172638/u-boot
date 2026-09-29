@@ -17,6 +17,19 @@ config ROCKCHIP_STIMER_BASE
 config SYS_SOC
 	default "rk3308"
 
+config ROCKCHIP_RK3308_DEBUG_JTAG
+	bool "Keep RK3308 debuggable over JTAG/SWD"
+	help
+	  Debug aid: SPL enables the debug signals in SGRF_SOC_CON0[4:0] and
+	  muxes GPIO1_C6/C7 to JTAG_TCK/JTAG_TMS (SWCLK/SWDIO), and boards
+	  may claim those pins in their device tree so that U-Boot does not
+	  hand them to UART2_M0 or SPI2. Both register values are the reset
+	  defaults; the SGRF bits are not described in the TRM, clearing them
+	  cuts off the debugger.
+
+	  Enabled by the rk3308-debug.config fragment:
+	    make rock-pi-s-rk3308_defconfig rk3308-debug.config
+
 config TPL_LDSCRIPT
 	default "arch/arm/mach-rockchip/u-boot-tpl-v8.lds"
 

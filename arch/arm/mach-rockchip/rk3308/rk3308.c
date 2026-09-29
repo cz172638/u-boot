@@ -183,6 +183,12 @@ int arch_cpu_init(void)
 		     GPIO2A3_SEL_SRC_CTRL_SEL_PLUS << GPIO2A3_SEL_SRC_CTRL_SHIFT |
 		     GPIO2A2_SEL_SRC_CTRL_SEL_PLUS << GPIO2A2_SEL_SRC_CTRL_SHIFT);
 
+	if (IS_ENABLED(CONFIG_ROCKCHIP_RK3308_DEBUG_JTAG)) {
+		/* debug enables [4:0], GPIO1_C6/C7 = JTAG_TCK/JTAG_TMS */
+		writel(0x001f001f, &sgrf->soc_con0);
+		writel(0x0ff00440, &grf->gpio1ch_iomux);
+	}
+
 	/* Plus options about GPIO3B2_PLUS, GPIO3B3_PLUS and GPIO2C0_PLUS. */
 	rk_clrsetreg(&grf->soc_con15,
 		     GPIO2C0_SEL_SRC_CTRL_MASK | GPIO3B3_SEL_SRC_CTRL_MASK |
