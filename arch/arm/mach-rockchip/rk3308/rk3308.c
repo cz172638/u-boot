@@ -2,8 +2,14 @@
 /*
  *Copyright (c) 2018 Rockchip Electronics Co., Ltd
  */
+#include <cpu_func.h>
+#include <fdtdec.h>
 #include <init.h>
+#include <log.h>
 #include <asm/armv8/mmu.h>
+#include <asm/global_data.h>
+#include <asm/system.h>
+#include <linux/libfdt.h>
 #include <asm/arch-rockchip/bootrom.h>
 #include <asm/arch-rockchip/grf_rk3308.h>
 #include <asm/arch-rockchip/hardware.h>
@@ -30,6 +36,50 @@ static struct mm_region rk3308_mem_map[] = {
 };
 
 struct mm_region *mem_map = rk3308_mem_map;
+
+#if !defined(CONFIG_XPL_BUILD) && !CONFIG_IS_ENABLED(SYS_DCACHE_OFF)
+DECLARE_GLOBAL_DATA_PTR;
+
+/*
+ * Keep /reserved-memory "no-map" regions out of U-Boot's page tables.
+ * OP-TEE protects its TZDRAM in the DDR firewall and adds it to the DT as
+ * a no-map region; left mapped as normal memory, speculative accesses from
+ * the normal world end in an SError (seen as a random "Error" handler
+ * shortly after relocation). Same approach as mach-k3 enable_caches().
+ */
+void enable_caches(void)
+{
+	const void *fdt = gd->fdt_blob;
+	int parent, node;
+
+	mmu_setup();
+
+	parent = fdt ? fdt_path_offset(fdt, "/reserved-memory") : -1;
+	if (parent >= 0) {
+		fdt_for_each_subnode(node, fdt, parent) {
+			fdt_addr_t addr;
+			fdt_size_t size;
+
+			if (!fdtdec_get_bool(fdt, node, "no-map") ||
+			    !fdtdec_get_is_enabled(fdt, node))
+				continue;
+			addr = fdtdec_get_addr_size(fdt, node, "reg", &size);
+			if (addr == FDT_ADDR_T_NONE || !size)
+				continue;
+			mmu_change_region_attr_nobreak(addr, size,
+						       PTE_TYPE_FAULT);
+			log_debug("unmapped %s 0x%llx+0x%llx\n",
+				  fdt_get_name(fdt, node, NULL),
+				  (unsigned long long)addr,
+				  (unsigned long long)size);
+		}
+	}
+
+	mmu_enable();
+	icache_enable();
+	dcache_enable();
+}
+#endif
 
 #define GRF_BASE	0xff000000
 #define SGRF_BASE	0xff2b0000
