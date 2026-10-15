@@ -160,6 +160,23 @@ config SYS_BOOTCOUNT_ADDR
 
 endif # BOOTCOUNT_LIMIT
 
+config ROCKCHIP_RK3399_PERILP_M0_REMAP
+	bool "Remap the PERILP Cortex-M0 to a DDR image in SPL"
+	depends on SPL
+	help
+	  Program the secure SGRF_PERILP_CON3/7 registers so that address 0
+	  of the PERILP Cortex-M0 maps to ROCKCHIP_RK3399_PERILP_M0_BASE.
+	  The core stays in reset; the OS (e.g. a Zephyr AMP launcher on the
+	  A53 cluster) releases it through the CRU. The image itself is
+	  expected as a FIT loadable at that address.
+
+config ROCKCHIP_RK3399_PERILP_M0_BASE
+	hex "DDR address of the PERILP Cortex-M0 image"
+	depends on ROCKCHIP_RK3399_PERILP_M0_REMAP
+	default 0x04000000
+	help
+	  Must be 4 KiB aligned.
+
 source "board/firefly/roc-pc-rk3399/Kconfig"
 source "board/google/gru/Kconfig"
 source "board/pine64/pinebook-pro-rk3399/Kconfig"

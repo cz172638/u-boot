@@ -18,6 +18,7 @@
 #include <asm/arch-rockchip/hardware.h>
 #include <asm/gpio.h>
 #include <linux/bitops.h>
+#include <linux/err.h>
 #include <linux/printk.h>
 #include <power/regulator.h>
 
@@ -229,9 +230,35 @@ void __weak led_setup(void)
 {
 }
 
+#if IS_ENABLED(CONFIG_ROCKCHIP_RK3399_PERILP_M0_REMAP)
+/*
+ * Point address 0 of the PERILP Cortex-M0 at an image in DDR. The SGRF is
+ * secure-only, so this has to happen here (EL3) rather than in the OS that
+ * later starts the core through the (non-secure) CRU resets. Same sequence
+ * TF-A uses for the PMU M0 with SGRF_PMU_CON0/3/7.
+ */
+static void rk3399_perilp_m0_remap(void)
+{
+	struct rk3399_pmusgrf_regs *sgrf;
+	ulong base = CONFIG_ROCKCHIP_RK3399_PERILP_M0_BASE;
+
+	sgrf = syscon_get_first_range(ROCKCHIP_SYSCON_PMUSGRF);
+	if (IS_ERR_OR_NULL(sgrf))
+		return;
+
+	rk_clrreg(&sgrf->perilp_con[0], BIT(7));
+	rk_clrsetreg(&sgrf->perilp_con[3], 0xffff, (base >> 12) & 0xffff);
+	rk_clrsetreg(&sgrf->perilp_con[7], 0xf, (base >> 28) & 0xf);
+	debug("PERILP M0 remap -> 0x%08lx\n", base);
+}
+#endif
+
 void spl_board_init(void)
 {
 	led_setup();
+#if IS_ENABLED(CONFIG_ROCKCHIP_RK3399_PERILP_M0_REMAP)
+	rk3399_perilp_m0_remap();
+#endif
 }
 #endif
 #endif
