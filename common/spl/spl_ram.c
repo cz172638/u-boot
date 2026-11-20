@@ -19,23 +19,13 @@
 static ulong spl_ram_load_read(struct spl_load_info *load, ulong sector,
 			       ulong count, void *buf)
 {
-	ulong addr = 0;
+	ulong addr = (ulong)load->priv;
 
 	debug("%s: sector %lx, count %lx, buf %lx\n",
 	      __func__, sector, count, (ulong)buf);
 
-	if (IS_ENABLED(CONFIG_SPL_LOAD_FIT)) {
-		addr = IF_ENABLED_INT(CONFIG_SPL_LOAD_FIT,
-				      CONFIG_SPL_LOAD_FIT_ADDRESS);
-
-#ifdef	CONFIG_SPL_PCI_DFU
-		if (spl_boot_device() == BOOT_DEVICE_PCIE)
-			addr = CONFIG_SPL_PCI_DFU_SPL_LOAD_FIT_ADDRESS;
-#endif
-	}
+	/* priv: FIT address, image_load_offset included */
 	addr += sector;
-	if (CONFIG_IS_ENABLED(IMAGE_PRE_LOAD))
-		addr += image_load_offset;
 
 	memcpy(buf, (void *)addr, count);
 
@@ -54,10 +44,18 @@ static int spl_ram_load_image(struct spl_image_info *spl_image,
 				      CONFIG_SPL_LOAD_FIT_ADDRESS);
 
 #ifdef CONFIG_SPL_PCI_DFU
-		if (spl_boot_device() == BOOT_DEVICE_PCIE)
+		if (bootdev->boot_device == BOOT_DEVICE_PCIE)
 			addr = CONFIG_SPL_PCI_DFU_SPL_LOAD_FIT_ADDRESS;
 #endif
 	}
+
+#if CONFIG_IS_ENABLED(PCI_DFU)
+	if (bootdev->boot_device == BOOT_DEVICE_PCIE) {
+		ret = spl_pci_dfu();
+		if (ret)
+			return ret;
+	}
+#endif
 
 	if (CONFIG_IS_ENABLED(IMAGE_PRE_LOAD)) {
 		ret = image_pre_load(addr);
@@ -74,17 +72,12 @@ static int spl_ram_load_image(struct spl_image_info *spl_image,
 		spl_dfu_cmd(0, "dfu_alt_info_ram", "ram", "0");
 #endif
 
-#if CONFIG_IS_ENABLED(PCI_DFU)
-	if (bootdev->boot_device == BOOT_DEVICE_PCIE)
-		spl_dfu_cmd(0, "dfu_alt_info_ram", "ram", "0");
-#endif
-
 	if (IS_ENABLED(CONFIG_SPL_LOAD_FIT) &&
 	    image_get_magic(header) == FDT_MAGIC) {
 		struct spl_load_info load;
 
 		debug("Found FIT\n");
-		spl_load_init(&load, spl_ram_load_read, NULL, 1);
+		spl_load_init(&load, spl_ram_load_read, (void *)addr, 1);
 		ret = spl_load_simple_fit(spl_image, &load, 0, header);
 	} else {
 		ulong u_boot_pos = spl_get_image_pos();
