@@ -28,6 +28,9 @@
 #define BOOT_DEVICE_XSPI		0x0E
 #define BOOT_DEVICE_NOBOOT		0x0F
 
+/* Not a BootROM boot mode: SPL loads the next stage over PCIe (SPL_PCI_DFU) */
+#define BOOT_DEVICE_PCIE		0x15
+
 /* U-Boot used aliases */
 #define BOOT_DEVICE_ETHERNET		0x04
 #define BOOT_DEVICE_SPINAND		0x10
