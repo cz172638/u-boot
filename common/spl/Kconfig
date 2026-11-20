@@ -1456,6 +1456,15 @@ config SPL_PCI_DFU_DEVICE_ID
 	help
 	  A 16-bit PCI Vendor ID for endpoint device for DFU over PCIe.
 
+config SPL_PCI_DFU_TIMEOUT_MS
+	int "Time to wait for the image over PCIe, in milliseconds"
+	default 0
+	help
+	  How long SPL waits for the root complex to write the image and
+	  the magic word. 0 waits forever. With a timeout, SPL stops the
+	  endpoint and goes on with the next boot device of the boot order,
+	  so PCIe can come first on a board that also boots from storage.
+
 config SPL_PCI_DFU_BOOT_PHASE
 	string "Current boot phase for PCI DFU boot"
 	help

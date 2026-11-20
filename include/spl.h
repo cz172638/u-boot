@@ -995,7 +995,8 @@ int spl_dfu_cmd(int usbctrl, char *dfu_alt_info, char *interface, char *devstr);
  * Act as a PCIe endpoint with BAR0 on CONFIG_SPL_PCI_DFU_SPL_LOAD_FIT_ADDRESS
  * until the root complex has written the image and the magic word.
  *
- * Return: 0 on success, negative error code on failure
+ * Return: 0 on success, -ETIMEDOUT after CONFIG_SPL_PCI_DFU_TIMEOUT_MS,
+ * other negative error code on failure
  */
 int spl_pci_dfu(void);
 

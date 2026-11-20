@@ -10,6 +10,7 @@
 #include <errno.h>
 #include <pci_ep.h>
 #include <spl.h>
+#include <time.h>
 #include <dm/uclass.h>
 #include <linux/io.h>
 #include <linux/printk.h>
@@ -31,6 +32,7 @@ int spl_pci_dfu(void)
 	uint fn = 0;
 	int ret;
 	char *bootphase;
+	ulong start;
 
 	uclass_get_device_by_seq(UCLASS_PCI_EP, 0, &dev);
 	if (!dev) {
@@ -85,9 +87,17 @@ int spl_pci_dfu(void)
 	magic_word = CONFIG_SPL_PCI_DFU_MAGIC_WORD;
 	(*(int *)addr) = 0;
 	flush_dcache_all();
+	start = get_timer(0);
 	for (;;) {
 		if (*(int *)addr == magic_word)
 			break;
+		if (CONFIG_SPL_PCI_DFU_TIMEOUT_MS &&
+		    get_timer(start) > CONFIG_SPL_PCI_DFU_TIMEOUT_MS) {
+			printf("PCIe: no image from the root complex in %u ms\n",
+			       CONFIG_SPL_PCI_DFU_TIMEOUT_MS);
+			pci_ep_stop(dev);
+			return -ETIMEDOUT;
+		}
 		invalidate_dcache_all();
 	}
 
