@@ -7,6 +7,8 @@
  */
 
 #include "k3-binman.dtsi"
+#include "k3-serdes.h"
+#include <dt-bindings/phy/phy.h>
 
 / {
 	chosen {
@@ -56,6 +58,71 @@
 &main_gpio1 {
 	bootph-all;
 };
+
+#if IS_ENABLED(CONFIG_SPL_PCI_DFU)
+/*
+ * PCIe boot: PCIE0 on SERDES1 (the PCIe FFC connector) as an endpoint, so
+ * a root complex can write the next boot stage into BAR0 (SPL_PCI_DFU).
+ */
+&serdes_ln_ctrl {
+	idle-states = <J722S_SERDES0_LANE0_USB>,
+		      <J722S_SERDES1_LANE0_PCIE0_LANE0>;
+	bootph-all;
+};
+
+&serdes_refclk {
+	bootph-all;
+};
+
+&serdes_wiz1 {
+	status = "okay";
+	bootph-all;
+};
+
+&serdes1 {
+	bootph-all;
+
+	serdes1_pcie_link: phy@0 {
+		reg = <0>;
+		cdns,num-lanes = <1>;
+		#phy-cells = <0>;
+		cdns,phy-type = <PHY_TYPE_PCIE>;
+		resets = <&serdes_wiz1 1>;
+		bootph-all;
+	};
+};
+
+&pcie0_ctrl {
+	bootph-all;
+};
+
+&pcie0_rc {
+	status = "disabled";
+};
+
+&cbass_main {
+	pcie0_ep: pcie-ep@f102000 {
+		compatible = "ti,am64-pcie-ep";
+		reg = <0x00 0x0f102000 0x00 0x1000>,
+		      <0x00 0x0f100000 0x00 0x400>,
+		      <0x00 0x0d000000 0x00 0x00800000>,
+		      <0x00 0x68000000 0x00 0x08000000>;
+		reg-names = "intd_cfg", "user_cfg", "reg", "mem";
+		interrupt-names = "link_state";
+		interrupts = <GIC_SPI 99 IRQ_TYPE_EDGE_RISING>;
+		max-link-speed = <2>;
+		num-lanes = <1>;
+		power-domains = <&k3_pds 259 TI_SCI_PD_EXCLUSIVE>;
+		clocks = <&k3_clks 259 0>;
+		clock-names = "fck";
+		max-functions = /bits/ 8 <1>;
+		phys = <&serdes1_pcie_link>;
+		phy-names = "pcie-phy";
+		ti,syscon-pcie-ctrl = <&pcie0_ctrl 0x0>;
+		bootph-all;
+	};
+};
+#endif
 
 #if IS_ENABLED(CONFIG_TARGET_J722S_R5_BEAGLEY_AI)
 

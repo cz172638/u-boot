@@ -43,6 +43,19 @@ void spl_perform_board_fixups(struct spl_image_info *spl_image)
 }
 #endif
 
+#if defined(CONFIG_XPL_BUILD) && IS_ENABLED(CONFIG_SPL_PCI_DFU)
+/*
+ * The BootROM cannot boot over PCIe: each SPL first waits for its next
+ * stage from a root complex on PCIE0, then falls back to the ROM boot
+ * device (CONFIG_SPL_PCI_DFU_TIMEOUT_MS).
+ */
+void board_boot_order(u32 *spl_boot_list)
+{
+	spl_boot_list[0] = BOOT_DEVICE_PCIE;
+	spl_boot_list[1] = spl_boot_device();
+}
+#endif
+
 #if IS_ENABLED(CONFIG_BOARD_LATE_INIT)
 int board_late_init(void)
 {
